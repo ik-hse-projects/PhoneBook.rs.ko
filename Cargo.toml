@@ -7,5 +7,10 @@ edition = "2018"
 [lib]
 crate-type = ["staticlib"]
 
+[profile.dev]
+debug = 0 # GDB does not works, so reduce size of module.
+
 [dependencies]
 linux-kernel-module = { git = "https://github.com/fishinabarrel/linux-kernel-module-rust.git" }
+try-lock = "0.2.3"
+lazy_static = {version="1.4.0", features=["spin_no_std"]}
