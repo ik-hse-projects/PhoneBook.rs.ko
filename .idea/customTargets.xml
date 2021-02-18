@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CLionExternalBuildManager">
+    <target id="f879b92b-df02-4def-ba22-793f532c06cd" name="build&amp;run target" defaultType="TOOL">
+      <configuration id="6be879bd-279c-4320-8433-dcae4917fca7" name="build&amp;run target" toolchainName="Default">
+        <build type="TOOL">
+          <tool actionId="Tool_External Tools_build.sh" />
+        </build>
+        <clean type="TOOL">
+          <tool actionId="Tool_External Tools_make clean" />
+        </clean>
+      </configuration>
+    </target>
+  </component>
+</project>
