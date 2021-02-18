@@ -23,6 +23,7 @@ use linux_kernel_module::{
 };
 
 use try_lock::TryLock;
+use core::ops::Index;
 
 #[derive(Debug, Clone)]
 struct User {
@@ -86,9 +87,51 @@ impl Data {
                             }
                         }
                     },
-                    ref args => Cow::Owned(format!("Expected 4 arguments, but given `{:#?}`", args))
+                    ref args => Cow::Owned(format!("Expected 5 arguments, but given `{:#?}`", args))
                 }
             },
+            Some("DEL") => {
+                let args = splitted.collect::<Vec<&str>>();
+                match args[..] {
+                    [id] => {
+                        match id.parse() {
+                            Ok(id) => {
+                                let to_remove = self.users.iter()
+                                    .enumerate()
+                                    .find(|(i, u)| u.id == id);
+                                match to_remove {
+                                    Some((idx, user)) => {
+                                        let response = format!("Removed: {}", user);
+                                        self.users.swap_remove(idx);
+                                        Cow::Owned(response)
+                                    },
+                                    None => Cow::Borrowed("Matching user not found")
+                                }
+                            },
+                            Err(e) => Cow::Owned(format!("Invalid id given: {}", e))
+                        }
+                    },
+                    ref args => Cow::Owned(format!("Expected 1 argument, but given `{:#?}`", args))
+                }
+            },
+            Some("FIND") => {
+                let args = splitted.collect::<Vec<&str>>();
+                match args[..] {
+                    [surname] => {
+                        let found = self.users.iter().filter(|u| u.surname == surname);
+                        let mut counter = 0;
+                        let mut result = String::new();
+                        for user in found {
+                            result.push_str(&user.to_string());
+                            result.push('\n');
+                            counter += 1;
+                        }
+                        result.push_str(&format!("Found {} users", counter));
+                        Cow::Owned(result)
+                    },
+                    ref args => Cow::Owned(format!("Expected 1 argument, but given `{:#?}`", args))
+                }
+            }
             Some(unknown) => Cow::Owned(format!("Unknown command: `{}`", unknown)),
             None => Cow::Borrowed("Command is missing"),
         }
@@ -137,10 +180,15 @@ impl HelloFile {
         let data = data.as_ref().ok_or(lkm::Error::EFAULT)?;
         let response = data.response.as_bytes();
         let offset = offset as usize;
-        if offset >= response.len() {
-            return Ok(())
+        if offset > response.len() {
+            return Ok(());
+        } else if offset != response.len() {
+            buf.write(&response[offset..])?;
         }
-        buf.write(&response[offset..])
+        if buf.len() != 0 {
+            buf.write(b"\n")?;
+        }
+        Ok(())
     }
 
     fn read_until_zero(buf: &mut UserSlicePtrReader) -> KernelResult<(Vec<u8>, bool)> {
